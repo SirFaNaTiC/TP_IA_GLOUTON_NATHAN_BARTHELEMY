@@ -275,7 +275,6 @@ def main():
     score2 = objectif(solution_vectors(sol2, color2))
 
     print("\nAlgorithme 2 - Résultats :")
-    
     print("Score obtenu sur cette instance :", score2)
     print("Nombre minimum de couleurs :", color2)
     print("Temps d'exécution de l'algorithme 2 :", tps2, "secondes\n")
