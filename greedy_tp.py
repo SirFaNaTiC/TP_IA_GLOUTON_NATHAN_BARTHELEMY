@@ -118,102 +118,105 @@ def find_color(matrix, sol, a_colorier):
         color += 1
 
 def algo_glouton_2(matrix, status_node, color, sol, step):
-    for i in range(len(status_node)): 
-        if status_node[i]==1:   # Si le sommet est voisin d'un sommet coloré
-            status_node[i]=0    # Remettre le statut du sommet à non-coloré
-    done=False
-    over=False
-    while not done:     # Boucle pour placer la couleur en cours sur tous les sommets possibles
-        Co_NCo=[]   # Liste permettant de contenir le nombre de voisins coloriables et non-coloriables pour chaque sommet
-        for j in range(len(matrix)): # Initialisation de la liste Co_NCo
-            Co_NCo.append([0,0])
+    # Vérification si tous les sommets sont coloriés
+    if all(node == 2 for node in status_node):
+        return sol, color  # Sortie avec la solution finale
+    
+    # Remise à zéro des sommets colorables/non-colorables
+    for i in range(len(status_node)):
+        if status_node[i] == 1:
+            status_node[i] = 0  # Marque le sommet comme non-coloré à nouveau
+    
+    done = False
+    over = False
+    
+    while not done:
+        # Initialisation de Co_NCo pour stocker le nombre de voisins coloriables et non-coloriables
+        Co_NCo = [[0, 0] for _ in range(len(matrix))]
+        
+        # Mise à jour des statuts des sommets voisins en fonction des couleurs
         for i in range(len(matrix)):
             for j in range(len(matrix)):
-                if matrix[i,j]==1:  # Si i et j sont voisins
+                if matrix[i, j] == 1:
                     for k in range(len(matrix)):
-                        if matrix[j,k]==1 and status_node[k]==2 and sol[k]==color and status_node[j]!=2: 
-                            #Si j et k sont voisins, si k est coloré et j ne l'est pas, lui mettre le statut de "non-coloriable"
-                            status_node[j]=1
+                        if matrix[j, k] == 1 and status_node[k] == 2 and sol[k] == color and status_node[j] != 2:
+                            status_node[j] = 1  # Marque j comme non-coloriable
+        
+        # Mise à jour du nombre de voisins coloriables et non-coloriables
         for j in range(len(matrix)):
             for k in range(len(matrix)):
-                if matrix[j,k]==1:      # Si je et k sont voisins
-                    if status_node[k]==0:   # Si k est non colorié, incrémenter le nombre de voisins non-coloriables de j
-                        Co_NCo[j][0]+=1
-                    else:       # Sinon, incrémenter le nombre de voisins coloriables de j
-                        Co_NCo[j][1]+=1
-        if step==1:     # Si il s'agit du premier placement de couleur
-            minC=Co_NCo[0][0]
-            indice=0
-            for i in range(len(matrix)):    # Chercher le sommet ayant le moins de voisins coloriables
-                if Co_NCo[i][0]<minC:
-                    minC=Co_NCo[i][0]
-                    indice=i
-            sol=solution_simple_vector(sol,indice,color)
-            status_node[indice]=2
-            step+=1
+                if matrix[j, k] == 1:
+                    if status_node[k] == 0:
+                        Co_NCo[j][0] += 1  # Nombre de voisins non colorés
+                    else:
+                        Co_NCo[j][1] += 1  # Nombre de voisins colorés
+        
+        # Premier placement de couleur
+        if step == 1:
+            minC = Co_NCo[0][0]
+            indice = 0
+            for i in range(len(matrix)):
+                if Co_NCo[i][0] < minC:
+                    minC = Co_NCo[i][0]
+                    indice = i
+            sol = solution_simple_vector(sol, indice, color)
+            status_node[indice] = 2
+            step += 1
         else:
-            maxNC=-1
-            indice=-1
-            for i in range(len(matrix)):    #Chercher le sommet ayant le plus de voisins non-coloriables
-                if status_node[i]==0 and Co_NCo[i][1]>maxNC:
-                        maxNC=Co_NCo[i][1]
-                        indice=i
-            if indice!=-1:      # Si la boucle précédente a trouvé un sommet
-                for i in range(len(matrix)):        # On cherche le sommet auquel mettre la couleur dans le cas 
-                                                    # où plusieurs auraient le même nombre de voisins non-coloriables
-                    if status_node[i]==0 and Co_NCo[i][1]==maxNC and i!=indice:
-                        if Co_NCo[i][0]<Co_NCo[indice][0]:  # Si le nombre de voisins coloriables de i est inférieur à celui d'indice,
-                                                            # alors indice prend la valeur de i
-                            indice=i
-                        if Co_NCo[i][0]==Co_NCo[indice][0]:     # En cas d'égalité du nombre de voisins coloriables, 
-                                                                # le choix est effectué aléatoirement
-                            indice=np.random.choice([i,indice])
-                sol=solution_simple_vector(sol,indice,color)
-                status_node[indice]=2
-        done=True
-        cpt=0
-        cpt2=0
-        for j in range(len(matrix)):    # Réinitialisation de la liste Co_NCo
-            Co_NCo.append([0,0])
-        for i in range(len(matrix)):
-            for j in range(len(matrix)):   
-                if matrix[i,j]==1:       # Si i et j sont voisins
-                    for k in range(len(matrix)):
-                        if matrix[j,k]==1 and status_node[k]==2 and sol[k]==color and status_node[j]!=2:
-                            #Si j et k sont voisins, si k est coloré et j ne l'est pas, lui mettre le statut de "non-coloriable"
-                            status_node[j]=1
-        for j in range(len(matrix)):
-            for k in range(len(matrix)):
-                if matrix[j,k]==1:       # Si i et j sont voisins
-                    if status_node[k]==0:   # Si k est non colorié, incrémenter le nombre de voisins non-coloriables de j
-                        Co_NCo[j][0]+=1
-                    else:       # Sinon, incrémenter le nombre de voisins coloriables de j
-                        Co_NCo[j][1]+=1
-        for i in range(len(status_node)):   # Vérification du nombre restant de voisins coloriables
-            if status_node[i]==0:   # Compteur du nombre de sommet coloriables
-                cpt+=1
-                if cpt+1>1:
-                    done=False
-            if status_node[i]==1:   # Compteur du nombre de sommets non-coloriés non-coloriables
-                cpt2+=1
-        if cpt==1 and cpt2==0:      # Si il n'y a pas de sommet non-colorié non-coloriable et un sommet coloriable
-            indice=0
+            # Chercher le sommet ayant le plus de voisins non-coloriables
+            maxNC = -1
+            indice = -1
+            for i in range(len(matrix)):
+                if status_node[i] == 0 and Co_NCo[i][1] > maxNC:
+                    maxNC = Co_NCo[i][1]
+                    indice = i
+
+            if indice != -1:
+                for i in range(len(matrix)):
+                    if status_node[i] == 0 and Co_NCo[i][1] == maxNC and i != indice:
+                        if Co_NCo[i][0] < Co_NCo[indice][0]:
+                            indice = i
+                        elif Co_NCo[i][0] == Co_NCo[indice][0]:
+                            indice = np.random.choice([i, indice])
+                sol = solution_simple_vector(sol, indice, color)
+                status_node[indice] = 2
+
+        # Vérification de fin de boucle
+        done = True
+        cpt, cpt2 = 0, 0
+
+        for i in range(len(status_node)):
+            if status_node[i] == 0:
+                cpt += 1
+                if cpt > 1:
+                    done = False
+            if status_node[i] == 1:
+                cpt2 += 1
+        
+        # Vérification si un seul sommet reste coloriable
+        if cpt == 1 and cpt2 == 0:
             for i in range(len(status_node)):
-                if sol[i]==0:
-                    indice=i
+                if sol[i] == 0:
+                    indice = i
             for i in range(len(status_node)):
-                if sol[i]==0:
-                    for j in range(len(status_node)):   # Coloration du dernier sommet non-coloré
-                        if sol[j]==color and matrix[i,j]==1:
-                            sol[i]=color+1
+                if sol[i] == 0:
+                    for j in range(len(status_node)):
+                        if sol[j] == color and matrix[i, j] == 1:
+                            sol[i] = color + 1
                         else:
-                            sol[i]=color
-                    over=True
-        if cpt==0 and cpt2==0:      # Fin du programme
-            over=True
-    if not over:    # Relance de la fonction avec la couleur suivante
-        sol,color=algo_glouton_2(matrix,status_node,color+1,sol,step+1)
+                            sol[i] = color
+            over = True
+
+        # Fin du programme si plus de sommets à colorier
+        if cpt == 0 and cpt2 == 0:
+            over = True
+    
+    # Relance de la fonction avec la couleur suivante si la coloration n'est pas terminée
+    if not over:
+        return algo_glouton_2(matrix, status_node, color + 1, sol, step + 1)
+    
     return sol, color
+
 
 def tester_algorithmes_sur_instances(paths):
     for path in paths:
